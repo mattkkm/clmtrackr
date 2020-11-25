@@ -93,6 +93,8 @@
 		<script src="./js/libs/utils.js"></script>
 		<script src="../build/clmtrackr.js"></script>
 		<script src="./js/libs/Stats.js"></script>
+		<script src="https://cdnjs.cloudflare.com/ajax/libs/pixi.js/5.1.3/pixi.min.js"></script>
+
 		<div id="content">
 			<h2>Facetracking example</h2>
 			<div id="container">
@@ -126,9 +128,11 @@
 			</div>
 			<a href="https://github.com/auduno/clmtrackr"><img style="position: absolute; top: 0; left: 0; border: 0;" src="https://s3.amazonaws.com/github/ribbons/forkme_left_green_007200.png" alt="Fork me on GitHub"></a>
 			<script>
+
 				var vid = document.getElementById('videoel');
 				var vid_width = vid.width;
 				var vid_height = vid.height;
+				
 				var overlay = document.getElementById('overlay');
 				var overlayCC = overlay.getContext('2d');
 
@@ -222,7 +226,8 @@
 					ctrack.start(vid);
 					trackingStarted = true;
 					// start loop to draw face
-					drawLoop();
+					// drawLoop();
+					drawLips();
 				}
 
 				function drawLoop() {
@@ -233,6 +238,58 @@
 						ctrack.draw(overlay);
 					}
 				}
+				
+				function drawLips(){
+					var points = ctrack.getCurrentPosition();
+					var renderer = PIXI.autoDetectRenderer({ transparent: true });
+					document.body.appendChild(renderer.view);
+
+					// create the root of the scene graph
+					var stage = new PIXI.Container();
+					var texture = PIXI.Texture.fromVideo(vid);
+					
+					var videoSprite = new PIXI.Sprite(texture);
+					videoSprite.width = 400;//renderer.width;
+					videoSprite.height = 300;//renderer.height;
+					var lip1Points = [44,45,46,47,48,49,50,59,60,61,44];
+					var lip2Points = [44,56,57,58,50,51,52,53,54,55,44];
+					var lip1 = new PIXI.Graphics();
+					var lip2 = new PIXI.Graphics();
+					stage.addChild(lip1);
+					stage.addChild(lip2);
+					stage.addChild(videoSprite);
+					animate();
+
+					function animate(){
+
+						// var points = ctrack.getCurrentPosition();
+						addLips(stage);
+						// render the stage
+						renderer.render(stage);
+
+						requestAnimationFrame(animate);
+					}
+					function addLips(){
+						var points = ctrack.getCurrentPosition();
+						drawLip(lip1, lip1Points, points);
+						drawLip(lip2, lip2Points, points);
+						stage.addChild(lip1);
+						stage.addChild(lip2);
+					}
+					function drawLip(lip, lipPoints, points){
+						if(!points)return;
+						lip.clear();
+						lip.beginFill(0xFF0000);
+						lip.lineStyle(1, 0xFF0000, 1);
+						lip.moveTo(points[lipPoints[0]][0],points[lipPoints[0]][1]);
+						lipPoints.forEach((point)=>{
+							lip.lineTo(points[point][0],points[point][1]);
+						})
+						lip.endFill();
+					}
+
+				}
+
 
 				/*********** Code for stats **********/
 
